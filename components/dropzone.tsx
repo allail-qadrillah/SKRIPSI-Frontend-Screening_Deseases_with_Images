@@ -2,20 +2,23 @@
 
 import { useState } from "react";
 import React, { useCallback } from "react";
-import { useDropzone, DropzoneOptions } from "react-dropzone";
+import { useDropzone, DropzoneOptions, FileRejection, DropEvent } from "react-dropzone";
 import Image from "@/components/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileWithPreview } from "@/types/file";
 import { fileToBase64 } from "@/lib/utils";
 import { ApiModelResult } from "@/types/file";
 
+interface DropzoneProps {
+  onResultApiReceived: (result: ApiModelResult) => void;
+}
 
-export function Dropzone({ onResultApiReceived }) {
+export function Dropzone({ onResultApiReceived }: DropzoneProps) {
   const [file, setFile] = useState<FileWithPreview | null>(null);
   const [isHaveFile, setHaveFile] = useState(false);
 
   const onDrop = useCallback(
-    async (acceptedFiles: File[], rejectedFiles: File[]) => {
+    async (acceptedFiles: File[], rejectedFiles: FileRejection[], event: DropEvent) => {
       if (acceptedFiles?.length) {
         const newFile: FileWithPreview = Object.assign(acceptedFiles[0], {
           preview: URL.createObjectURL(acceptedFiles[0]),
@@ -40,7 +43,6 @@ export function Dropzone({ onResultApiReceived }) {
 
           const result = await response.json();
           onResultApiReceived(result);
-
         } catch (error) {
           console.log("Error fetching api: ", error);
         }
@@ -48,10 +50,8 @@ export function Dropzone({ onResultApiReceived }) {
     },
     [onResultApiReceived]
   );
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-  } as DropzoneOptions);
+  
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
   return (
     <div className="flex justify-center items-center py-10">
